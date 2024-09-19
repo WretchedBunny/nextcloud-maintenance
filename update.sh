@@ -21,22 +21,22 @@ sudo -u www-data php $NEXTCLOUD_PATH/occ maintenance:mode --on
 
 
 if [ -d $NEXTCLOUD_PATH/scripts/update ] && [ -d $NEXTCLOUD_PATH/scripts/update/data ]; then
-	echo "$NEXTCLOUD_PATH/scripts/update/data is found. Proceeding download the latest version of the Nextcloud"
-	wget $LATEST_VERSION_URL -O $NEXTCLOUD_PATH/scripts/update/data/latest_nextcloud.tar.bz2
+	echo "$NEXTCLOUD_PATH/update/data is found. Proceeding download the latest version of the Nextcloud"
+	wget $LATEST_VERSION_URL -O $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2
 
 else
-	echo "Directory is not found. Creating a new directories under $NEXTCLOUD_PATH/scripts/update/data"
-	mkdir $NEXTCLOUD_PATH/scripts/update/ $NEXTCLOUD_PATH/scripts/update/data/
-	wget $LATEST_VERSION_URL -O $NEXTCLOUD_PATH/scripts/update/data/latest_nextcloud.tar.bz2
+	echo "Directory is not found. Creating a new directories under $NEXTCLOUD_PATH/update/data"
+	mkdir $NEXTCLOUD_PATH/update/ $NEXTCLOUD_PATH/update/data/
+	wget $LATEST_VERSION_URL -O $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2
 fi
 echo "Downloading signature"
-wget $SIGNATURE_URL -O $NEXTCLOUD_PATH/scripts/update/data/latest_nextcloud.tar.bz2.asc
-ls $NEXTCLOUD_PATH/scripts/update/data/
+wget $SIGNATURE_URL -O $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2.asc
+ls $NEXTCLOUD_PATH/update/data/
 echo "Grabbing the keys"
 wget $KEYS_URL -O- | gpg --import
 
 echo "Verifying the signature"
-gpg --verify $NEXTCLOUD_PATH/scripts/update/data/latest_nextcloud.tar.bz2.asc $NEXTCLOUD_PATH/scripts/update/data/latest_nextcloud.tar.bz2
+gpg --verify $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2.asc $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2
 
 if [ $? -ne 0 ]; then
 	echo "GPG verification has failed" >&2
@@ -46,7 +46,7 @@ else
 fi
 
 echo "Extracting files"
-tar -xjvf $NEXTCLOUD_PATH/scripts/update/data/latest_nextcloud.tar.bz2 -C $NEXTCLOUD_PATH/scripts/update/data/
+tar -xjvf $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2 -C $NEXTCLOUD_PATH/update/data/
 
 echo "Stopping  your apache2.service"
 systemctl stop apache2.service
@@ -55,16 +55,13 @@ echo "Backing-up current Nextcloud version"
 mv $NEXTCLOUD_PATH /var/www/nextcloud_backups/
 
 echo "Moving new version to /var/www"
-mv $NEXTCLOUD_PATH_OLD/scripts/update/data/nextcloud/ /var/www/
+mv $NEXTCLOUD_PATH_OLD/update/data/nextcloud/ /var/www/
 
 echo "Copying the old config to the new version"
 cp -p $NEXTCLOUD_PATH_OLD/config/config.php $NEXTCLOUD_PATH/config/
 
 echo "Copying the old data/ to the new version"
 cp -r -p $NEXTCLOUD_PATH_OLD/data/ $NEXTCLOUD_PATH/
-
-echo "Copying extras to the new version"
-cp -r -p $NEXTCLOUD_PATH_OLD/scripts/	$NEXTCLOUD_PATH/
 
 echo "Adjusting file ownership and persmissions"
 chown -R www-data:www-data $NEXTCLOUD_PATH
@@ -78,8 +75,8 @@ echo "Launching the upgrade using occ"
 sudo -u www-data php $NEXTCLOUD_PATH/occ upgrade
 
 echo "Cleaning up temporary files..."
-rm $NEXTCLOUD_PATH_OLD/scripts/update/data/latest_nextcloud.tar.bz2
-rm $NEXTCLOUD_PATH_OLD/scripts/update/data/latest_nextcloud.tar.bz2.asc
+rm $NEXTCLOUD_PATH_OLD/update/data/latest_nextcloud.tar.bz2
+rm $NEXTCLOUD_PATH_OLD/update/data/latest_nextcloud.tar.bz2.asc
 
 echo "Stopping maintance"
 sudo -u www-data php $NEXTCLOUD_PATH/occ maintenance:mode --off
