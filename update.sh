@@ -1,7 +1,8 @@
 #!/bin/bash
 LATEST_VERSION_URL="https://download.nextcloud.com/server/releases/latest.tar.bz2"
 NEXTCLOUD_PATH="/var/www/nextcloud"
-NEXTCLOUD_PATH_OLD="/var/www/nextcloud_backups/nextcloud"
+PREVIOUS_VERSION=$(sudo -u www-data php $NEXTCLOUD_PATH/occ -V | awk '{print $2}')
+NEXTCLOUD_PATH_OLD="/var/www/nextcloud_backups/nextcloud_$PREVIOUS_VERSION"
 SIGNATURE_URL="https://download.nextcloud.com/server/releases/latest.tar.bz2.asc"
 KEYS_URL="https://nextcloud.com/nextcloud.asc"
 
@@ -20,8 +21,8 @@ echo "Putting Nextcloud into maintance mode..."
 sudo -u www-data php $NEXTCLOUD_PATH/occ maintenance:mode --on
 
 
-if [ -d $NEXTCLOUD_PATH/scripts/update ] && [ -d $NEXTCLOUD_PATH/scripts/update/data ]; then
-	echo "$NEXTCLOUD_PATH/update/data is found. Proceeding download the latest version of the Nextcloud"
+if [ -d $NEXTCLOUD_PATH/update ] && [ -d $NEXTCLOUD_PATH/update/data ]; then
+	echo "NEXTCLOUD_PATH/update/data is found. Proceeding download the latest version of the Nextcloud"
 	wget $LATEST_VERSION_URL -O $NEXTCLOUD_PATH/update/data/latest_nextcloud.tar.bz2
 
 else
@@ -52,7 +53,7 @@ echo "Stopping  your apache2.service"
 systemctl stop apache2.service
 
 echo "Backing-up current Nextcloud version"
-mv $NEXTCLOUD_PATH /var/www/nextcloud_backups/
+mv $NEXTCLOUD_PATH "/var/www/nextcloud_backups/nextcloud_$PREVIOUS_VERSION"
 
 echo "Moving new version to /var/www"
 mv $NEXTCLOUD_PATH_OLD/update/data/nextcloud/ /var/www/
@@ -76,7 +77,6 @@ sudo -u www-data php $NEXTCLOUD_PATH/occ upgrade
 
 echo "Cleaning up temporary files..."
 rm $NEXTCLOUD_PATH_OLD/update/data/latest_nextcloud.tar.bz2
-rm $NEXTCLOUD_PATH_OLD/update/data/latest_nextcloud.tar.bz2.asc
 
 echo "Stopping maintance"
 sudo -u www-data php $NEXTCLOUD_PATH/occ maintenance:mode --off
