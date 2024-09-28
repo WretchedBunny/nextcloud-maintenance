@@ -2,6 +2,7 @@
 LATEST_VERSION_URL="https://download.nextcloud.com/server/releases/latest.tar.bz2"
 NEXTCLOUD_PATH="/var/www/nextcloud"
 PREVIOUS_VERSION=$(sudo -u www-data php $NEXTCLOUD_PATH/occ -V | awk '{print $2}')
+UPDATE_INFO="$(sudo -u www-data php /var/www/nextcloud/updater/updater.phar)"
 NEXTCLOUD_PATH_OLD="/var/www/nextcloud_backups/nextcloud_$PREVIOUS_VERSION"
 SIGNATURE_URL="https://download.nextcloud.com/server/releases/latest.tar.bz2.asc"
 KEYS_URL="https://nextcloud.com/nextcloud.asc"
@@ -16,6 +17,11 @@ check_root() {
 }
 
 check_root "$@"
+
+
+if echo $UPDATE_INFO | grep -i "No update available" ; then
+	exit 0
+fi
 
 echo "Putting Nextcloud into maintance mode..."
 sudo -u www-data php $NEXTCLOUD_PATH/occ maintenance:mode --on
