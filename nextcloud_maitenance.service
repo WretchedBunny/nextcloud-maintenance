@@ -1,0 +1,14 @@
+[Unit]
+Description=Nextcloud maintenance scripts
+After=network.target
+
+[Service]
+User=www-data #Takes a UNIX user name. Specifies the user name to invoke the main process of the container as.
+ExecStart=/home/liftingpeach/scripts/nextcloud/update.sh
+Nice=10 #Scheduling priority of processes
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WanterBy=multi-user.target
